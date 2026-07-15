@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Layayoga — Breath &amp; Dissolution</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,450;9..144,650&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" />
+<style>
+:root{--bg:#07070e;--panel:rgba(10,10,20,0.97);--ink:rgba(255,255,255,0.78);--muted:rgba(255,255,255,0.42);--faint:rgba(255,255,255,0.18);--line:rgba(255,255,255,0.08);--line-strong:rgba(255,255,255,0.14);--accent:rgba(255,255,255,0.65);--accent-soft:rgba(255,255,255,0.08)}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg)}
+body{font-family:"IBM Plex Sans",-apple-system,sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased;}
+#app{width:100%;max-width:none;min-height:100dvh;margin:0;background:var(--bg);display:flex;flex-direction:column;position:relative;overflow:hidden;user-select:none}
+.screen{display:none;flex:1;position:relative}
+.screen.active{display:flex}
+#home-screen{flex-direction:column;align-items:center;justify-content:flex-start;padding:calc(14px + env(safe-area-inset-top)) 16px calc(96px + env(safe-area-inset-bottom));touch-action:none;cursor:pointer}
+#home-canvas-wrap{width:min(58vw,240px);height:min(58vw,240px);margin-top:2px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+canvas{display:block;width:100%;height:100%}
+#count-main{font-size:72px;line-height:.9;letter-spacing:-.08em;font-weight:700;color:rgba(255,255,255,0.72)}
+#count-sub{margin-top:6px;font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:rgba(255,255,255,0.22)}
+#count-progress{margin-top:6px;font-size:11px;letter-spacing:.08em;color:rgba(255,255,255,0.38)}
+#bottom-zone{margin-top:8px;display:flex;flex-direction:column;align-items:center;gap:14px;width:100%}
+#phase-label{font-size:20px;font-family:"Fraunces",serif;letter-spacing:-.02em;color:rgba(255,255,255,0.9);text-align:center;min-height:2.2em}
+#phase-label .sub{font-size:13px;font-family:"IBM Plex Sans",sans-serif;color:var(--muted);letter-spacing:-.01em}
+#start-btn{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.7);padding:14px 40px;border-radius:40px;font-size:15px;cursor:pointer;font-family:inherit;margin-top:4px;transition:.2s}
+#start-btn:hover{background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.22)}
+#start-btn:active{transform:scale(0.97)}
+#info-screen{flex-direction:column;padding:calc(20px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom));overflow-y:auto}
+#info-back{background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;font-family:inherit;padding:6px 0;margin-bottom:16px;display:inline-flex;align-items:center;gap:6px}
+#info-back:hover{color:var(--ink)}
+.med-title{font-family:"Fraunces",serif;font-size:28px;font-weight:650;line-height:1.1;margin-bottom:4px}
+.med-subtitle{font-size:14px;color:var(--ink);line-height:1.4;margin-bottom:16px}
+.med-section{margin-bottom:14px}
+.med-section h3{font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.med-section ul{list-style:none;padding:0}
+.med-section li{font-size:14px;line-height:1.55;padding:5px 0;color:var(--ink);border-bottom:1px solid var(--line)}
+.med-section li:last-child{border:none}
+.med-section p{font-size:14px;line-height:1.5;color:var(--muted)}
+.tag{display:inline-block;font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;border-radius:4px;background:var(--accent-soft);color:var(--accent);margin-bottom:8px}
+#dock{position:fixed;bottom:0;left:0;right:0;z-index:60;background:var(--bg);padding:8px calc(16px + env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left));border-top:1px solid var(--line)}
+#dock-inner{display:flex;align-items:center;justify-content:space-between;max-width:500px;margin:0 auto}
+#dock-name{font-family:"Fraunces",serif;font-size:14px;letter-spacing:-.01em;font-weight:450;color:var(--ink)}
+#dock-nav{display:flex;gap:12px}
+.dock-btn{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:var(--muted);width:40px;height:40px;border-radius:40px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;transition:.2s}
+.dock-btn:hover{background:rgba(255,255,255,0.12);color:var(--ink)}
+#picker-overlay{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,0.85);display:none;flex-direction:column;padding:calc(20px + env(safe-area-inset-top)) 0 calc(20px + env(safe-area-inset-bottom))}
+#picker-overlay.open{display:flex}
+#picker-header{display:flex;align-items:center;justify-content:space-between;padding:0 20px 12px;border-bottom:1px solid var(--line)}
+#picker-header h2{font-family:"Fraunces",serif;font-size:18px;font-weight:450;color:var(--ink)}
+#picker-close{background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;padding:4px}
+#picker-list{flex:1;overflow-y:auto;padding:8px 0}
+.picker-item{padding:14px 20px;cursor:pointer;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px;transition:.15s}
+.picker-item:hover{background:rgba(255,255,255,0.04)}
+.picker-item .dot{width:10px;height:10px;border-radius:10px;flex-shrink:0}
+.picker-item .p-name{font-family:"Fraunces",serif;font-size:15px;color:var(--ink)}
+.picker-item .p-sub{font-size:12px;color:var(--muted);margin-top:1px}
+.picker-item .p-stage{font-size:11px;color:var(--faint);margin-left:auto;letter-spacing:.04em}
+#home-canvas-wrap{-webkit-tap-highlight-color:transparent}
+#breathe-status{margin-top:12px;text-align:center}
+#phase-name{font-family:"Fraunces",serif;font-size:22px;transition:color .3s;line-height:1.2}
+#phase-time{font-size:44px;font-weight:600;letter-spacing:-.06em;margin:2px 0;font-feature-settings:"tnum"}
+#round-label{font-size:12px;color:var(--muted);letter-spacing:.06em;margin-top:6px}
+.timer-btn{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.7);padding:8px 24px;border-radius:24px;font-size:13px;cursor:pointer;font-family:inherit;transition:.2s;margin:0 4px}
+.timer-btn:hover{background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.22)}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="home-screen" class="screen active">
+    <div id="home-canvas-wrap"><canvas id="breath-canvas"></canvas></div>
+    <div id="breathe-status">
+      <div id="phase-name">Nāḍī Śodhana</div>
+      <div id="phase-time" style="color:#22c55e">—</div>
+      <div id="round-label">5 rounds · 1:4:2</div>
+    </div>
+    <div id="bottom-zone">
+      <button id="start-btn">Start</button>
+    </div>
+  </div>
+  <div id="info-screen" class="screen">
+    <button id="info-back">← Back</button>
+    <div id="info-content"></div>
+  </div>
+  <div id="dock">
+    <div id="dock-inner">
+      <div id="dock-name">Nāḍī Śodhana</div>
+      <div id="dock-nav">
+        <button class="dock-btn" id="dock-list" title="All techniques">☰</button>
+        <button class="dock-btn" id="dock-prev" title="Previous">◀</button>
+        <button class="dock-btn" id="dock-next" title="Next">▶</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="picker-overlay">
+  <div id="picker-header"><h2>Layayoga Practices</h2><button id="picker-close">✕</button></div>
+  <div id="picker-list"></div>
+</div>
+<script>
+const TECHNIQUES = [
+  {
+    name:'Nāḍī Śodhana', group:'pranayama', accent:'#22c55e',
+    subtitle:'Alternate-nostril breathing with the classical 1:4:2 ratio — balances the sun and moon channels, forces prāṇa into the central channel.',
+    ratio:'4·16·8', inhale:4, holdIn:16, exhale:8, holdOut:0, cycle:28, rounds:5,
+    howto:[
+      'Sit with right hand in Vishnu mudra (thumb over right nostril, ring over left).',
+      'Close right nostril, exhale fully through the left nostril. Inhale left for 4.',
+      'Close both nostrils, hold for 16 (with mūla bandha + uḍḍīyāna bandha if comfortable).',
+      'Release right nostril, exhale for 8. Inhale right for 4.',
+      'Close both, hold for 16. Release left, exhale for 8. That is one round.',
+      'The 1:4:2 ratio IS the tetrahedron: 1 inhale (Śiva), 4 hold (the 4 faces), 2 exhale (Euler characteristic V−E+F = 4−6+4 = 2).'
+    ],
+    effect:'When iḍā and piṅgalā balance, prāṇa enters suṣumṇā and duality ceases.',
+    advance:'Advance when the 1:4:2 ratio is comfortable for all 5 rounds without strain.'
+  },
+  {
+    name:'Sama Vṛtti', group:'pranayama', accent:'#3b82f6',
+    subtitle:'Equal breathing — the tetrahedron\'s 4 vertices in time. Establishes equanimity before deeper practice.',
+    ratio:'4·4·4·4', inhale:4, holdIn:4, exhale:4, holdOut:4, cycle:16, rounds:10,
+    howto:[
+      'Inhale for 4, hold full for 4, exhale for 4, hold empty for 4.',
+      'Equal phases in all four directions — the tetrahedron\'s vertices.',
+      'Trace the square of the breath. Each side is one face of the tetrahedron.',
+      'Use before any Mātṛkā practice to establish calm baseline.'
+    ],
+    effect:'Calms the mind, establishes the 4-fold rhythm mirroring the structure of consciousness.',
+    advance:'Advance when equal phases feel natural and the mind stays steady through all 10 rounds.'
+  },
+  {
+    name:'Green Core Breath', group:'pranayama', accent:'#22c55e',
+    subtitle:'Anchors awareness at Anāhata (heart center, 550 nm) — the center of the tetrahedron where all 6 edges relax simultaneously.',
+    ratio:'4·8·8', inhale:4, holdIn:8, exhale:8, holdOut:0, cycle:20, rounds:5,
+    howto:[
+      'Inhale 4s — feel the breath arriving at the center of the chest.',
+      'Hold 8s — visualize emerald green light at the heart center, 550 nm.',
+      'Exhale 8s — the green light radiates from the heart through the whole body.',
+      'After the breath, chant "ta tha da dha na" mentally at the heart center.'
+    ],
+    effect:'Anchors at the green core — Anāhata, the dental row of the Mātṛkā, the point of balance.',
+    advance:'Advance when green core can be located immediately at the start of each cycle.'
+  },
+  {
+    name:'SAUḤ Emission', group:'mantra', accent:'#f59e0b',
+    subtitle:'The emission seed mantra — opens the pure path. S = sat (Śiva), AU = expansion (Śakti→Īśvara), Ḥ = visarga (emission).',
+    ratio:'4·8·8', inhale:4, holdIn:8, exhale:8, holdOut:0, cycle:20, rounds:3,
+    howto:[
+      'Inhale 4s — feel awareness at the crown (Sahasrāra).',
+      'Hold 8s — the seed forms in silence at the crown.',
+      'Exhale 8s — vibrate SAUḤ (सौः) aloud. Feel the sound descending from crown to heart.',
+      '3 repetitions total. Each repetition opens the field further.',
+      'SAUḤ IS "I am Śiva" — the recognition that consciousness is the ground.'
+    ],
+    effect:'Opens the field for practice. SAUḤ = tattvas 1-5 (the pure path).',
+    advance:'Advance when SAUḤ vibrates through the whole body on a single exhalation.'
+  },
+  {
+    name:'KHPHREṄ Withdrawal', group:'mantra', accent:'#ef4444',
+    subtitle:'The withdrawal seed — forces consciousness out of peripheral nāḍīs into suṣumṇā. The most powerful tool for dissolving blockages.',
+    ratio:'4·16·8', inhale:4, holdIn:16, exhale:8, holdOut:0, cycle:28, rounds:11,
+    howto:[
+      'Inhale 4s — awareness at the root (Mūlādhāra).',
+      'Hold 16s — feel the blockage at its location in the body.',
+      'Exhale 8s — vibrate KHPHREṄ (क्ष्फ्रेṁ) aloud. Feel the sound cutting through the blockage.',
+      '11 repetitions total. The bīja starts with KṢA (Earth, tattva 36) and withdraws through the elements back toward the veil.',
+      'KHPHREṄ IS the withdrawal path in sound form.'
+    ],
+    effect:'Dissolves any blockage by forcing prāṇa into suṣumṇā. KṢA (earth) → PH (expansion) → RE (fire) → Ṁ (the veil, Māyā).',
+    advance:'Advance when KHPHREṄ can be sustained for the full 11 rounds and the body relaxes deeper each time.'
+  },
+  {
+    name:'The 5 Voids', group:'advanced', accent:'#a855f7',
+    subtitle:'Progressive dissolution of the subtle body through the five voids — from heart to the End of the Twelve (dvādaśānta).',
+    ratio:'5·5·5', inhale:5, holdIn:5, exhale:5, holdOut:0, cycle:15, rounds:6,
+    howto:[
+      'Void 1 — HEART: Rest awareness at Anāhata. Hypnagogic images arise. Let them pass.',
+      'Void 2 — THROAT: Move to Viśuddha. Dream-narrative begins. Observe without engaging.',
+      'Void 3 — PALATE: Behind the soft palate. Lucid awareness — you notice you are dreaming.',
+      'Void 4 — ABOVE PALATE: Dreamless — free of image and narrative. Rest here.',
+      'Void 5 — DVĀDAŚĀNTA: 12 fingers above the crown. Pure consciousness beyond subtle body.',
+      'One void per breath cycle. Inhale at the void, hold there, exhale release.'
+    ],
+    effect:'Dissolves the subtle body upward through the voids. The 5th void (dvādaśānta) is the limit state where only Śiva remains.',
+    advance:'Advance when each void can be located with clarity in a single breath cycle.'
+  },
+  {
+    name:'Complete Bīja Sequence', group:'sequence', accent:'#22c55e',
+    subtitle:'The full layayoga session in mantra — open, center, dissolve, complete.',
+    ratio:'4·16·8', inhale:4, holdIn:16, exhale:8, holdOut:0, cycle:28, rounds:0,
+    howto:[
+      'Phase 1 — SAUḤ 3×: Open the field. Fill with the emission seed.',
+      'Phase 2 — YAṄ 7×: Anchor at the green core (Anāhata, heart). The heart bīja.',
+      'Phase 3 — KHPHREṄ 11×: Dissolve blockages. The withdrawal seed.',
+      'Phase 4 — Sit in silence for 2+ minutes. Let the dissolution complete itself.',
+      'This sequence covers the entire practice: SAUḤ opens, YAṄ centers, KHPHREṄ dissolves, silence absorbs.'
+    ],
+    effect:'The complete layayoga session. When the bījas have done their work, silence reveals what was always present.',
+    advance:'Extend the final silence — from 2 minutes to 5, 10, or longer.'
+  },
+];
+
+let current = 0, running = false, phase = 'idle', round = 0;
+let timer = null, phaseStart = 0;
+const canvas = document.getElementById('breath-canvas');
+const ctx = canvas.getContext('2d');
+let W, H, CX, CY, MAX_R;
+
+function resize() {
+  const wrap = document.getElementById('home-canvas-wrap');
+  const size = Math.min(wrap.offsetWidth, 240);
+  W = canvas.width = size * 2; H = canvas.height = size * 2;
+  CX = W/2; CY = H/2; MAX_R = size * 0.8;
+  canvas.style.width = size + 'px'; canvas.style.height = size + 'px';
+  ctx.scale(2, 2);
+}
+
+let animPhase = 0, targetR = 0;
+
+function drawRing() {
+  const t = TECHNIQUES[current];
+  if (!t) return;
+  ctx.clearRect(0, 0, W, H);
+  const r = MAX_R * 0.35 + (MAX_R * 0.5) * targetR;
+  ctx.beginPath();
+  ctx.arc(CX/2, CY/2, r, 0, Math.PI * 2);
+  ctx.strokeStyle = t.accent + '60';
+  ctx.lineWidth = 3;
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(CX/2, CY/2, r, -Math.PI/2, -Math.PI/2 + animPhase * Math.PI * 2);
+  ctx.strokeStyle = t.accent;
+  ctx.lineWidth = 4;
+  ctx.lineCap = 'round';
+  ctx.stroke();
+  requestAnimationFrame(drawRing);
+}
+
+function getPhaseDuration() {
+  const t = TECHNIQUES[current];
+  if (!t) return 1;
+  if (phase === 'inhale') return t.inhale;
+  if (phase === 'holdIn') return t.holdIn;
+  if (phase === 'exhale') return t.exhale;
+  if (phase === 'holdOut') return t.holdOut;
+  return 1;
+}
+
+function getPhaseName() {
+  if (phase === 'inhale') return 'INHALE';
+  if (phase === 'holdIn') return 'HOLD';
+  if (phase === 'exhale') return 'EXHALE';
+  if (phase === 'holdOut') return 'HOLD EMPTY';
+  return 'READY';
+}
+
+function getTimeLeft() {
+  return Math.max(0, Math.ceil(getPhaseDuration() - (Date.now() - phaseStart) / 1000));
+}
+
+function getPhaseColor() {
+  if (phase === 'inhale') return '#22c55e';
+  if (phase === 'holdIn') return '#eab308';
+  if (phase === 'exhale') return '#3b82f6';
+  if (phase === 'holdOut') return '#a855f7';
+  return 'rgba(255,255,255,0.3)';
+}
+
+function updateUI() {
+  const t = TECHNIQUES[current];
+  document.getElementById('phase-name').textContent = t?.name || 'Layayoga';
+  document.getElementById('phase-time').textContent = getTimeLeft() + 's';
+  document.getElementById('phase-time').style.color = getPhaseColor();
+  const rl = document.getElementById('round-label');
+  if (running && t.rounds > 0) rl.textContent = `${phase === 'idle' ? '—' : round} / ${t.rounds} rounds · ${t.ratio}`;
+  else rl.textContent = (t.rounds > 0 ? `${t.rounds} rounds · ` : '') + t.ratio;
+}
+
+function startCycle() {
+  const t = TECHNIQUES[current];
+  if (!t || running) return;
+  running = true; round = 1;
+  nextPhase('inhale');
+}
+
+function nextPhase(p) {
+  const t = TECHNIQUES[current];
+  phase = p; phaseStart = Date.now();
+  if (timer) clearInterval(timer);
+  timer = setInterval(() => {
+    const left = getTimeLeft();
+    targetR = p === 'inhale' ? left / getPhaseDuration() : p === 'exhale' ? 1 - left / getPhaseDuration() : 0.5;
+    animPhase = 1 - left / getPhaseDuration();
+    updateUI();
+    if (left <= 0) {
+      if (p === 'inhale') { if (t.holdIn > 0) nextPhase('holdIn'); else nextPhase('exhale'); }
+      else if (p === 'holdIn') nextPhase('exhale');
+      else if (p === 'exhale') { if (t.holdOut > 0) nextPhase('holdOut'); else endRound(); }
+      else if (p === 'holdOut') endRound();
+    }
+  }, 50);
+  updateUI();
+}
+
+function endRound() {
+  const t = TECHNIQUES[current];
+  if (t.rounds > 0 && round < t.rounds) { round++; nextPhase('inhale'); }
+  else finish();
+}
+
+function finish() {
+  running = false; phase = 'idle';
+  if (timer) clearInterval(timer);
+  document.getElementById('start-btn').textContent = 'Start';
+  document.getElementById('phase-time').textContent = '—';
+  targetR = 0; animPhase = 0;
+}
+
+function selectIndex(i) {
+  const t = TECHNIQUES[i];
+  if (!t) return;
+  finish();
+  current = i;
+  const t2 = TECHNIQUES[current];
+  document.getElementById('dock-name').textContent = t2.name;
+  document.getElementById('phase-name').textContent = t2.name;
+  const rl = document.getElementById('round-label');
+  rl.textContent = (t2.rounds > 0 ? `${t2.rounds} rounds · ` : '') + t2.ratio;
+  document.getElementById('start-btn').textContent = 'Start';
+  document.getElementById('start-btn').style.color = t2.accent;
+  document.getElementById('phase-time').textContent = '—';
+  document.getElementById('phase-time').style.color = t2.accent;
+  targetR = 0; animPhase = 0;
+  updateInfoScreen();
+  updatePickerSelection();
+}
+
+function updateInfoScreen() {
+  const t = TECHNIQUES[current];
+  const el = document.getElementById('info-content');
+  let html = `<div class="tag" style="border:1px solid ${t.accent};color:${t.accent}">${t.group}</div>`;
+  html += `<div class="med-title" style="color:${t.accent}">${t.name}</div>`;
+  html += `<div class="med-subtitle">${t.subtitle}</div>`;
+  html += `<div class="med-section"><h3>How to Practice</h3><ul>`;
+  t.howto.forEach(h => html += `<li>${h}</li>`);
+  html += `</ul></div>`;
+  html += `<div class="med-section"><h3>Why</h3><p>${t.effect}</p></div>`;
+  html += `<div class="med-section"><h3>When to Move On</h3><p>${t.advance}</p></div>`;
+  el.innerHTML = html;
+}
+
+function updatePickerSelection() {
+  document.querySelectorAll('.picker-item').forEach((el, i) => {
+    el.style.background = i === current ? 'rgba(255,255,255,0.06)' : '';
+  });
+}
+
+function buildPicker() {
+  const list = document.getElementById('picker-list');
+  TECHNIQUES.forEach((t, i) => {
+    const el = document.createElement('div');
+    el.className = 'picker-item';
+    el.innerHTML = `<div class="dot" style="background:${t.accent}"></div><div><div class="p-name">${t.name}</div><div class="p-sub">${t.group} · ${t.ratio}</div></div><div class="p-stage">${i + 1}</div>`;
+    el.onclick = () => { document.getElementById('picker-overlay').classList.remove('open'); selectIndex(i); };
+    list.appendChild(el);
+  });
+}
+
+document.getElementById('start-btn').onclick = startCycle;
+document.getElementById('info-back').onclick = () => { document.getElementById('home-screen').classList.add('active'); document.getElementById('info-screen').classList.remove('active'); };
+document.getElementById('dock-list').onclick = () => document.getElementById('picker-overlay').classList.add('open');
+document.getElementById('picker-close').onclick = () => document.getElementById('picker-overlay').classList.remove('open');
+document.getElementById('dock-prev').onclick = () => selectIndex((current - 1 + TECHNIQUES.length) % TECHNIQUES.length);
+document.getElementById('dock-next').onclick = () => selectIndex((current + 1) % TECHNIQUES.length);
+
+resize(); selectIndex(0); drawRing();
+window.addEventListener('resize', resize);
+</script>
+</body>
+</html>
